@@ -1,26 +1,46 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+  <div>
+    <comp-fetch></comp-fetch>
+    <!-- <Suspense>
+      <template #default>
+        <comp-fetch/>      
+      </template>
+      <template #fallback>
+        <div>Loading... (3 seconds)</div>   
+      </template>
+    </Suspense> -->
+    <comp-content/>
+  </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+
+// import { compContent } from '~components/comp-content';
+// console.log(compContent)
+import compFetch from './components/comp-fetch/fetch'
+import { asyncLoader } from './components/comp-async-load/index'
+
+
+import { h } from 'vue'
+import compError from './components/comp-error/error'
+import { setAsyncLoaderOptions, optionAsyncLoader } from './components/comp-async-load/index'
+
+setAsyncLoaderOptions({
+  timeout: 1000,
+  minTime: 2000,
+  createErrorComponent: (errorMessage, retry) => h(compError, {errorMessage, retry})
+})
+
 
 export default {
   name: 'App',
   components: {
-    HelloWorld
-  }
+    compFetch: asyncLoader(compFetch),
+    compContent: asyncLoader('comp-content/content')
+  },
+  created() {}
 }
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
 </style>
