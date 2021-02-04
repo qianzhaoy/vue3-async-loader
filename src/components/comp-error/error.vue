@@ -1,11 +1,11 @@
 <template>
-  <div class="customError" @click="onRetry">重试{{errorMessage}}</div>
+  <div class="customError" @click="onRetry">重试{{error.message}}</div>
 </template>
 
 <script>
 export default {
   props: {
-    errorMessage: String,
+    error: Error,
     retry: Function
   },
   methods: {

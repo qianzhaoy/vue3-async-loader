@@ -1,5 +1,4 @@
-import { h, Suspense, defineAsyncComponent, onErrorCaptured, ref, isVNode } from 'vue'
-import loadingComp from '../comp-loading/loading'
+import { h, Suspense, defineAsyncComponent, onErrorCaptured, ref } from 'vue'
 
 const baseLoaderDefaultOptions = {
   minTime: 0,
@@ -21,55 +20,73 @@ function throwError(errMessage) {
   throw new Error(errMessage)
 }
 
+function noop() {}
+
 function createLoaderFunc(componentPath, options = baseLoaderDefaultOptions) {
-  const { minTime, timeout } = options
-  return async function importComponent() {
+  const { minTime, timeout, onComponentLoadStatus = noop } = options
+  return function importComponent() {
     let timer
-    try {
-      // TODO: 超时报错捕获
-      if (timeout) {
-        timer = setTimeout(() => {
-          throwError(`load ${componentPath} timeout`)
-        }, timeout);
-      }
-      const [ componentObject ] = await Promise.all([
-        import(/* webpackChunkName: "[request]"*/ `~components/${componentPath}`),
-        sleep(minTime)
-      ])
-      return componentObject
-    } finally {
-      clearTimeout(timer)
+    if (timeout) {
+      timer = setTimeout(() => {
+        onComponentLoadStatus({
+          error: new Error(`load ${componentPath} timeout`),
+          loaded: false
+        })
+      }, timeout);
     }
+    return Promise.all([
+      import(/* webpackChunkName: "[request]"*/ `~components/${componentPath}`),
+      sleep(minTime)
+    ]).then(([componentObject]) => {
+      onComponentLoadStatus({
+        loaded: true
+      })
+      return componentObject
+    }).finally(() => {
+      clearTimeout(timer)
+    })
   }
 }
 
 const asyncLoaderDefaultOptions = {
-  createLoadingComponent: () => h(loadingComp),
-  createErrorComponent: (errorMessage) => h('div', null, [errorMessage])
+  loadingComponent: h('div', null, 'loading...'),
+  errorComponent: {
+    props: {
+      error: Error
+    },
+    render({$props}) {
+      return h('div', null, [$props.error.message])
+    }
+  }
 }
 
-const globalOptions = {}
-export function setAsyncLoaderOptions (options = {}) {
+const pluginOptions = {
+  basePath: '~components'
+}
+function setAsyncLoaderOptions (options = {}) {
   for (const key in options) {
     if (Object.hasOwnProperty.call(options, key)) {
       const value = options[key];
-      globalOptions[key] = value     
+      pluginOptions[key] = value     
     }
   }
 }
 
 function optionAsyncLoader(componentPath, options = {}) {
+  const { 
+    errorComponent = asyncLoaderDefaultOptions.errorComponent, 
+    loadingComponent = asyncLoaderDefaultOptions.loadingComponent
+  } = options
+
+  const { onComponentLoadStatus } = options
   return defineAsyncComponent({
     loader: createLoaderFunc(componentPath, {
       minTime: options.minTime,
-      timeout: options.timeout
+      timeout: options.timeout,
+      onComponentLoadStatus
     }),
-    loadingComponent: loadingComp,
-    errorComponent: {
-      render() {
-        return h('div', null, ['error...'])
-      }
-    },
+    loadingComponent: loadingComponent,
+    errorComponent: errorComponent,
     onError(error, retry, fail, attempts) {
       const needRetry = typeof options.retry === 'function' && options.retry(error)
       if (needRetry && attempts <= options.attempts) {
@@ -82,37 +99,66 @@ function optionAsyncLoader(componentPath, options = {}) {
   })
 }
 
+function useComponentStatus() {
+  const error = ref(null)
+  const loaded = ref(false)
+
+  function setError(e) {
+    error.value = e
+    return true
+  }
+
+  function retry () {
+    loaded.value = false
+    error.value = null
+  }
+
+  function setLoaded(value) {
+    loaded.value = value
+  }
+
+  function setComponentLoadStatus({ loaded: loadedValue, error: errorValue }) {
+    if (typeof loadedValue === 'boolean') {
+      setLoaded(true)
+    }
+    if (errorValue instanceof Error) {
+      setError(errorValue)
+      setLoaded(false)
+    }
+  }
+
+  onErrorCaptured(setError)
+
+  return {
+    error,
+    retry,
+    setComponentLoadStatus
+  }
+}
+
+
 export function asyncLoader (componentPath, options = {}) {
-  const { createErrorComponent, createLoadingComponent, ...defineAsyncOptions } = { ...asyncLoaderDefaultOptions, ...globalOptions, ...options, }
   return {
     setup() {
-      const error = ref(null)
-      onErrorCaptured(setError)
+      const { retry, error, setComponentLoadStatus } = useComponentStatus()
 
-      function setError(e) {
-        error.value = e
-        return true
-      }
-
-      function retry () {
-        error.value = null
-      }
-      // return { error, retry }
-      return (state) => {
-        if (state.error) {
-          const errorComponent = createErrorComponent(state.error.message, state.retry)
-          if (isVNode(errorComponent)) {
-            return errorComponent
-          }
-          return h(errorComponent)
+      const { errorComponent, loadingComponent, ...defineAsyncOptions } = { ...asyncLoaderDefaultOptions, ...pluginOptions, ...options, }
+      defineAsyncOptions.onComponentLoadStatus = setComponentLoadStatus
+      return () => {
+        if (error.value) {
+          return h(errorComponent, { error: error.value, retry })
         }
 
         const asyncomponent = typeof componentPath === 'object' ? componentPath : optionAsyncLoader(componentPath, defineAsyncOptions)
         return h(Suspense, null, {
           default: h(asyncomponent),
-          fallback: createLoadingComponent()
+          fallback: loadingComponent
         })
       }
     }
   }
+}
+
+export default function install(app, options) {
+  setAsyncLoaderOptions(options)
 }

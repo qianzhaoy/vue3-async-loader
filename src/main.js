@@ -1,13 +1,12 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 
-// import { h } from 'vue'
-// import compError from './components/comp-error/error'
-// import { setAsyncLoaderOptions } from './components/comp-async-load/index'
+import compError from './components/comp-error/error'
+import asyncPlugin from './components/comp-async-load/index'
 
-// setAsyncLoaderOptions({
-//   loadingDelay: 3000,
-//   createErrorComponent: (...props) => h(compError, { ...props })
-// })
-
-createApp(App).mount('#app')
+const app = createApp(App)
+app.use(asyncPlugin, {
+  errorComponent: compError,
+  minTime: 2000
+})
+app.mount('#app')

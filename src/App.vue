@@ -25,12 +25,10 @@ import { h } from 'vue'
 import compError from './components/comp-error/error'
 import { setAsyncLoaderOptions, optionAsyncLoader } from './components/comp-async-load/index'
 
-setAsyncLoaderOptions({
-  timeout: 1000,
-  minTime: 2000,
-  createErrorComponent: (errorMessage, retry) => h(compError, {errorMessage, retry})
-})
-
+// setAsyncLoaderOptions({
+//   minTime: 2000,
+//   errorComponent: compError
+// })
 
 export default {
   name: 'App',
