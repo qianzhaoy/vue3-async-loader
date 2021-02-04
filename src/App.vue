@@ -9,26 +9,16 @@
         <div>Loading... (3 seconds)</div>   
       </template>
     </Suspense> -->
-    <comp-content/>
+    <div style="height: 200px; width: 200px">
+      <comp-content/>
+    </div>
   </div>
 </template>
 
 <script>
 
-// import { compContent } from '~components/comp-content';
-// console.log(compContent)
 import compFetch from './components/comp-fetch/fetch'
 import { asyncLoader } from './components/comp-async-load/index'
-
-
-import { h } from 'vue'
-import compError from './components/comp-error/error'
-import { setAsyncLoaderOptions, optionAsyncLoader } from './components/comp-async-load/index'
-
-// setAsyncLoaderOptions({
-//   minTime: 2000,
-//   errorComponent: compError
-// })
 
 export default {
   name: 'App',

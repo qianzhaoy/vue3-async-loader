@@ -1,12 +1,13 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 
-import compError from './components/comp-error/error'
-import asyncPlugin from './components/comp-async-load/index'
+import installElementPlus from './plugins/element'
+import asyncLoaderPlus from './plugins/async-loader'
+import 'element-plus/lib/theme-chalk/index.css';
 
 const app = createApp(App)
-app.use(asyncPlugin, {
-  errorComponent: compError,
-  minTime: 2000
-})
+
+app.use(installElementPlus)
+app.use(asyncLoaderPlus)
+
 app.mount('#app')

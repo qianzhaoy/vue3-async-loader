@@ -1,5 +1,5 @@
 <template>
-  <div>{{ userInfo.username }}</div>
+  <div style="height: 200px">{{ userInfo.username }}</div>
 </template>
 
 <script>
@@ -15,9 +15,6 @@ function fetchData () {
 export default {
   async setup() {
     const userInfo = await fetchData()
-    setTimeout(() => {
-      userInfo.username = 'xxxx'
-    }, 2000);
     // throw new Error('请求错误')
     return {
       userInfo

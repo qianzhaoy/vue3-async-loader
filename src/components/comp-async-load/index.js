@@ -152,7 +152,7 @@ export function asyncLoader (componentPath, options = {}) {
         const asyncomponent = typeof componentPath === 'object' ? componentPath : optionAsyncLoader(componentPath, defineAsyncOptions)
         return h(Suspense, null, {
           default: h(asyncomponent),
-          fallback: loadingComponent
+          fallback: h(loadingComponent)
         })
       }
     }
