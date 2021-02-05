@@ -1,7 +1,7 @@
 <template>
   <div class="customError">
     <el-empty :description="errorMessage">
-      <el-button @click="onRetry">点击重试</el-button>
+      <el-button @click.stop="onRetry">点击重试</el-button>
     </el-empty>
   </div>
 </template>

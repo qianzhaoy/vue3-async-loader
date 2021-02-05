@@ -25,17 +25,18 @@ function throwError(errMessage) {
 function noop() {}
 
 function createLoaderFunc(componentPath, options = baseLoaderDefaultOptions) {
-  const { minTime, timeout, onComponentLoadStatus = noop } = options
+  const { minTime, loaderTimeout, onComponentLoadStatus = noop } = options
   return function importComponent() {
     let timer
-    if (timeout) {
+    if (loaderTimeout) {
       timer = setTimeout(() => {
         onComponentLoadStatus({
           error: new Error(`load ${componentPath} timeout`),
           loaded: false
         })
-      }, timeout);
+      }, loaderTimeout);
     }
+    console.log('start loaded')
     return Promise.all([
       import(/* webpackChunkName: "[request]"*/ `~components/${componentPath}`),
       sleep(minTime)
@@ -71,31 +72,31 @@ function setAsyncLoaderOptions (options = {}) {
   }
 }
 
-function optionAsyncLoader(componentPath, options = {}) {
+export function optionAsyncLoader(componentPath, options = {}) {
   const { 
     errorComponent = asyncLoaderDefaultOptions.errorComponent, 
     loadingComponent = asyncLoaderDefaultOptions.loadingComponent
   } = options
-
   const { onComponentLoadStatus } = options
-  const asyncComponentWrpper = defineAsyncComponent({
+  const asyncComponentOptions = {
     loader: createLoaderFunc(componentPath, {
       minTime: options.minTime,
-      timeout: options.timeout,
+      timeout: options.loaderTimeout,
       onComponentLoadStatus
     }),
     loadingComponent: loadingComponent,
     errorComponent: errorComponent,
     onError(error, retry, fail, attempts) {
-      const needRetry = typeof options.retry === 'function' && options.retry(error)
-      if (needRetry && attempts <= options.attempts) {
+      const needRetry = typeof options.shouldRetry === 'function' && options.shouldRetry(error, attempts)
+      if (needRetry || attempts <= (options.attempts || 0)) {
         retry()
       } else {
         fail()
       }
     },
     ...options,
-  })
+  }
+  const asyncComponentWrpper = defineAsyncComponent(asyncComponentOptions)
   return asyncComponentWrpper
 }
 
@@ -136,6 +137,18 @@ function useComponentStatus() {
   }
 }
 
+function useDelay(delay) {
+  const delayed = ref(!!delay)
+  if (delay) {
+    setTimeout(() => {
+      delayed.value = false
+    }, delay);
+  }
+  return {
+    delayed,
+  }
+}
+
 
 export function asyncLoader (componentPath, options = {}) {
   return {
@@ -143,9 +156,11 @@ export function asyncLoader (componentPath, options = {}) {
     emits: ['resolve', 'fallback', 'pending'],
     setup(props, context) {
       const { retry, error, setComponentLoadStatus } = useComponentStatus()
+
       const { 
         errorComponent, 
         loadingComponent,
+        delay,
         ...defineAsyncOptions 
       } = { ...asyncLoaderDefaultOptions, ...pluginOptions, ...options, }
       defineAsyncOptions.onComponentLoadStatus = setComponentLoadStatus
@@ -174,7 +189,7 @@ export function asyncLoader (componentPath, options = {}) {
         }
         const defaultChildComponent = h(asynComponent, self.$attrs, instance.vnode.children)
         defaultChildComponent.ref = instance.vnode.ref
-        
+
         return h(Suspense, {
           onFallback(...args) {
             self.$emit('fallback', ...args)
@@ -187,7 +202,13 @@ export function asyncLoader (componentPath, options = {}) {
           },
         }, {
           default: defaultChildComponent,
-          fallback: h(loadingComponent)
+          // fallback 变动好像会导致 default 重新渲染, delay 只能放 fallback 里执行
+          fallback: h({
+            setup() {
+              const { delayed } = useDelay(delay)
+              return () => !delayed.value ? h(loadingComponent) : null
+            }
+          })
         })
       }
     }

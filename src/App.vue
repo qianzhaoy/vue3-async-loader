@@ -25,12 +25,23 @@
 
 <script>
 
-import { asyncLoader } from './plugins/async-loader/index'
-import { defineAsyncComponent } from 'vue'
+import { asyncLoader, optionAsyncLoader } from './plugins/async-loader/index'
+import { defineAsyncComponent, h } from 'vue'
 
-import compFetch from '~components/comp-fetch/fetch'
+// import compFetch from '~components/comp-fetch/fetch'
+import Loading from '~components/comp-loading/loading'
 
-const loading = defineAsyncComponent(() => import('~components/comp-loading/loading'))
+
+function sleep(time) {
+  if (!time) {
+    return true
+  }
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve(true)
+    }, time);
+  })
+}
 
 export default {
   name: 'App',
@@ -39,15 +50,27 @@ export default {
       parentTitle: 'sdd'
     }
   },
-  mounted() {
-    setTimeout(() => {
-      console.log(this.$refs.compContent)
-    }, 1000)
-  },
+  // mounted() {
+  //   setTimeout(() => {
+  //     console.log(this.$refs.compContent)
+  //   }, 1000)
+  // },
   components: {
-    compFetch: asyncLoader(compFetch),
-    compContent: asyncLoader('comp-content/content'),
-    compLoading: loading
+    compFetch: asyncLoader('comp-fetch/fetch'),
+    compContent: defineAsyncComponent({
+      loader: async () => {
+        await sleep(5000)
+        const res = await import('~components/comp-content/content')
+        return res
+      },
+      loadingComponent: Loading,
+      // loadingComponent: {
+      //   render() {
+      //     return h('div', null, ['loading'])
+      //   }
+      // },
+      delay: 2000
+    }),
   },
   methods: {
     handleContentClick() {

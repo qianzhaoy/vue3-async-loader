@@ -8,7 +8,7 @@ function fetchData () {
   return new Promise((resolve, reject) => {
     setTimeout(function () {
       resolve(reactive({ username: '我的用户名' }))
-    }, 200)
+    }, 0)
   })
 }
 
