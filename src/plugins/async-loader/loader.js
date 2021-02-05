@@ -36,7 +36,6 @@ function createLoaderFunc(componentPath, options = baseLoaderDefaultOptions) {
         })
       }, loaderTimeout);
     }
-    console.log('start loaded')
     return Promise.all([
       import(/* webpackChunkName: "[request]"*/ `~components/${componentPath}`),
       sleep(minTime)

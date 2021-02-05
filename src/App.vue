@@ -50,27 +50,9 @@ export default {
       parentTitle: 'sdd'
     }
   },
-  // mounted() {
-  //   setTimeout(() => {
-  //     console.log(this.$refs.compContent)
-  //   }, 1000)
-  // },
   components: {
     compFetch: asyncLoader('comp-fetch/fetch'),
-    compContent: defineAsyncComponent({
-      loader: async () => {
-        await sleep(5000)
-        const res = await import('~components/comp-content/content')
-        return res
-      },
-      loadingComponent: Loading,
-      // loadingComponent: {
-      //   render() {
-      //     return h('div', null, ['loading'])
-      //   }
-      // },
-      delay: 2000
-    }),
+    compContent: asyncLoader('comp-content/content')
   },
   methods: {
     handleContentClick() {
