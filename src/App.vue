@@ -1,10 +1,16 @@
 <template>
   <div>
-    <comp-fetch></comp-fetch>
+    <div style="height: 200px; width: 200px">
+      <comp-fetch></comp-fetch>
+    </div>
     <div style="height: 200px; width: 200px">
       <comp-content ref="compContent" @resolve="handleResolve" @click="handleContentClick" :title="parentTitle">
         <div>this is child</div>
       </comp-content>
+    </div>
+
+    <div style="height: 200px; width: 200px">
+      <demo-error></demo-error>
     </div>
 
     <!-- <Suspense 
@@ -25,23 +31,7 @@
 
 <script>
 
-import { asyncLoader, optionAsyncLoader } from './plugins/async-loader/index'
-import { defineAsyncComponent, h } from 'vue'
-
-// import compFetch from '~components/comp-fetch/fetch'
-import Loading from '~components/comp-loading/loading'
-
-
-function sleep(time) {
-  if (!time) {
-    return true
-  }
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve(true)
-    }, time);
-  })
-}
+import { asyncLoader } from './plugins/async-loader/index'
 
 export default {
   name: 'App',
@@ -52,7 +42,8 @@ export default {
   },
   components: {
     compFetch: asyncLoader('comp-fetch/fetch'),
-    compContent: asyncLoader('comp-content/content')
+    compContent: asyncLoader('comp-content/content'),
+    demoError: asyncLoader('comp-demo-error/index'),
   },
   methods: {
     handleContentClick() {

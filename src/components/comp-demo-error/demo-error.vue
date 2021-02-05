@@ -1,22 +1,22 @@
 <template>
-  <div style="height: 200px">{{ userInfo.username }}</div>
+  <div>我只会报错</div>
 </template>
 
 <script>
-import { reactive, watch } from 'vue'
+import { reactive } from 'vue'
 function fetchData () {
   return new Promise((resolve, reject) => {
     setTimeout(function () {
-      resolve(reactive({ username: '我的用户名' }))
+      reject('请求失败')
+      // resolve(reactive({ username: '我的用户名' }))
     }, 1000)
   })
 }
-
 export default {
   async setup() {
-    const userInfo = await fetchData()
+    const res = await fetchData()
     return {
-      userInfo
+      res
     }
   }
 }

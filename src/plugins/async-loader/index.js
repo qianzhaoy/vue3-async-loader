@@ -7,7 +7,6 @@ export default function (app) {
   app.use(asyncPlugin, {
     errorComponent: compError,
     loadingComponent: ElSkeleton,
-    minTime: 5000,
-    delay: 2000,
+    minTime: 1500,
   })
 }

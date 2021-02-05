@@ -163,7 +163,6 @@ export function asyncLoader (componentPath, options = {}) {
         ...defineAsyncOptions 
       } = { ...asyncLoaderDefaultOptions, ...pluginOptions, ...options, }
       defineAsyncOptions.onComponentLoadStatus = setComponentLoadStatus
-
       const instance = getCurrentInstance()
       return (self) => {
         if (error.value) {
@@ -204,8 +203,10 @@ export function asyncLoader (componentPath, options = {}) {
           // fallback 变动好像会导致 default 重新渲染, delay 只能放 fallback 里执行
           fallback: h({
             setup() {
-              const { delayed } = useDelay(delay)
-              return () => !delayed.value ? h(loadingComponent) : null
+              // 居然影响到了 error 的状态, 一个未知 bug。先注释 delay 的实现
+              // const { delayed } = useDelay(delay)
+              // return () => !delayed.value ? h(loadingComponent) : null
+              return () => h(loadingComponent)
             }
           })
         })
