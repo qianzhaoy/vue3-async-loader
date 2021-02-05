@@ -1,7 +1,18 @@
 <template>
   <div>
     <comp-fetch></comp-fetch>
-    <!-- <Suspense>
+    <div style="height: 200px; width: 200px">
+      <comp-content ref="compContent" @resolve="handleResolve" @click="handleContentClick" :title="parentTitle">
+        <div>this is child</div>
+      </comp-content>
+    </div>
+
+    <!-- <Suspense 
+      :onResolve="onResolve"
+      :onPending="onPending"
+      :onFallback="onFallback"
+      :timeout="1000"
+    >
       <template #default>
         <comp-fetch/>      
       </template>
@@ -9,24 +20,49 @@
         <div>Loading... (3 seconds)</div>   
       </template>
     </Suspense> -->
-    <div style="height: 200px; width: 200px">
-      <comp-content/>
-    </div>
   </div>
 </template>
 
 <script>
 
-import compFetch from './components/comp-fetch/fetch'
-import { asyncLoader } from './components/comp-async-load/index'
+import { asyncLoader } from './plugins/async-loader/index'
+import { defineAsyncComponent } from 'vue'
+
+import compFetch from '~components/comp-fetch/fetch'
+
+const loading = defineAsyncComponent(() => import('~components/comp-loading/loading'))
 
 export default {
   name: 'App',
+  data() {
+    return {
+      parentTitle: 'sdd'
+    }
+  },
+  mounted() {
+    setTimeout(() => {
+      console.log(this.$refs.compContent)
+    }, 1000)
+  },
   components: {
     compFetch: asyncLoader(compFetch),
-    compContent: asyncLoader('comp-content/content')
+    compContent: asyncLoader('comp-content/content'),
+    compLoading: loading
   },
-  created() {}
+  methods: {
+    handleContentClick() {
+      console.log('handleContentClick');
+    },
+    handleResolve() {
+      console.log('onResolve-handleResolve');
+    },
+    onPending() {
+      console.log('onPending');
+    },
+    onFallback() {
+      console.log('onFallback');
+    }
+  },
 }
 </script>
 

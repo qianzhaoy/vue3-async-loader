@@ -1,26 +1,32 @@
-
+<template>
+  <div>
+    <slot/>
+    <div @click="handleClick">
+      {{title}}
+    </div>
+  </div>
+</template>
 <script>
-import { reactive, h } from 'vue'
-import { slotTest } from  '../comp-slot-test'
+import { reactive } from 'vue'
 
 export default {
   name: 'comp-content',
-  components: {
-    slotTest
+  emits: ['click'],
+  props: {
+    title: String
+  },
+  methods: {
+    handleClick() {
+      this.$emit('click')
+    }
   },
   setup() {
     const observea = reactive({
       title: 11
     })
-    setTimeout(function() {
-      observea.title = 22
-    }, 2000)
-    return () => h(slotTest, {
-      data: observea.title
-    }, {
-      default: () => h('div', observea.title),
-      footer: () => h('div', observea.title)
-    })
+    return {
+      observea
+    }
   }
 }
 </script>

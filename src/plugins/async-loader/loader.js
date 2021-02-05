@@ -1,9 +1,11 @@
-import { h, Suspense, defineAsyncComponent, onErrorCaptured, ref } from 'vue'
+import { h, Suspense, defineAsyncComponent, onErrorCaptured, ref, getCurrentInstance } from 'vue'
 
 const baseLoaderDefaultOptions = {
   minTime: 0,
   timeout: 0
 }
+
+const pluginOptions = {}
 
 function sleep(time) {
   if (!time) {
@@ -60,9 +62,6 @@ const asyncLoaderDefaultOptions = {
   }
 }
 
-const pluginOptions = {
-  basePath: '~components'
-}
 function setAsyncLoaderOptions (options = {}) {
   for (const key in options) {
     if (Object.hasOwnProperty.call(options, key)) {
@@ -79,7 +78,7 @@ function optionAsyncLoader(componentPath, options = {}) {
   } = options
 
   const { onComponentLoadStatus } = options
-  return defineAsyncComponent({
+  const asyncComponentWrpper = defineAsyncComponent({
     loader: createLoaderFunc(componentPath, {
       minTime: options.minTime,
       timeout: options.timeout,
@@ -97,6 +96,7 @@ function optionAsyncLoader(componentPath, options = {}) {
     },
     ...options,
   })
+  return asyncComponentWrpper
 }
 
 function useComponentStatus() {
@@ -104,7 +104,7 @@ function useComponentStatus() {
   const loaded = ref(false)
 
   function setError(e) {
-    error.value = e
+    error.value = e instanceof Error ? e : new Error(String(e))
     return true
   }
 
@@ -139,19 +139,54 @@ function useComponentStatus() {
 
 export function asyncLoader (componentPath, options = {}) {
   return {
-    setup() {
+    name: 'asyncLoaderWrapper',
+    emits: ['resolve', 'fallback', 'pending'],
+    setup(props, context) {
       const { retry, error, setComponentLoadStatus } = useComponentStatus()
-
-      const { errorComponent, loadingComponent, ...defineAsyncOptions } = { ...asyncLoaderDefaultOptions, ...pluginOptions, ...options, }
+      const { 
+        errorComponent, 
+        loadingComponent,
+        ...defineAsyncOptions 
+      } = { ...asyncLoaderDefaultOptions, ...pluginOptions, ...options, }
       defineAsyncOptions.onComponentLoadStatus = setComponentLoadStatus
-      return () => {
+
+      const instance = getCurrentInstance()
+      return (self) => {
         if (error.value) {
           return h(errorComponent, { error: error.value, retry })
         }
-
-        const asyncomponent = typeof componentPath === 'object' ? componentPath : optionAsyncLoader(componentPath, defineAsyncOptions)
-        return h(Suspense, null, {
-          default: h(asyncomponent),
+        let asynComponent = null
+        if (typeof componentPath === 'object' && componentPath.setup) {
+          const originSetup = componentPath.setup
+          const { minTime } = defineAsyncOptions
+          if (minTime) {
+            componentPath.setup = function () {
+              return Promise.all([originSetup.call(this), sleep(minTime)]).then(([setupState]) => {
+                return setupState
+              })
+            }
+          }
+          asynComponent = componentPath
+        } else if (typeof componentPath === 'string') {
+          asynComponent = optionAsyncLoader(componentPath, defineAsyncOptions)
+        } else {
+          return null
+        }
+        const defaultChildComponent = h(asynComponent, self.$attrs, instance.vnode.children)
+        defaultChildComponent.ref = instance.vnode.ref
+        
+        return h(Suspense, {
+          onFallback(...args) {
+            self.$emit('fallback', ...args)
+          },
+          onResolve(...args) {
+            self.$emit('resolve', ...args)
+          },
+          onPending(...args) {
+            self.$emit('pending', ...args)
+          },
+        }, {
+          default: defaultChildComponent,
           fallback: h(loadingComponent)
         })
       }
