@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <!-- <div>
     <div style="height: 200px; width: 200px">
       <comp-fetch></comp-fetch>
     </div>
@@ -7,7 +7,7 @@
       <comp-content ref="compContent" @resolve="handleResolve" @click="handleContentClick" :title="parentTitle">
         <div>this is child</div>
       </comp-content>
-    </div>
+    </div> -->
 
     <div style="height: 200px; width: 200px">
       <demo-error></demo-error>
@@ -26,7 +26,7 @@
         <div>Loading... (3 seconds)</div>   
       </template>
     </Suspense> -->
-  </div>
+  <!-- </div> -->
 </template>
 
 <script>

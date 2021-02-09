@@ -6,10 +6,10 @@
 import { reactive } from 'vue'
 function fetchData () {
   return new Promise((resolve, reject) => {
-    setTimeout(function () {
+    setTimeout( () => {
       reject('请求失败')
       // resolve(reactive({ username: '我的用户名' }))
-    }, 1000)
+    }, 1500)
   })
 }
 export default {

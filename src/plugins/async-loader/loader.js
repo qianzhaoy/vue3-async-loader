@@ -104,8 +104,9 @@ function useComponentStatus() {
   const loaded = ref(false)
 
   function setError(e) {
+    debugger
     error.value = e instanceof Error ? e : new Error(String(e))
-    return true
+    // return true
   }
 
   function retry () {
@@ -166,7 +167,8 @@ export function asyncLoader (componentPath, options = {}) {
       const instance = getCurrentInstance()
       return (self) => {
         if (error.value) {
-          return h(errorComponent, { error: error.value, retry })
+          // return h(errorComponent, { error: error.value, retry })
+          return h('div', null, ['error'])
         }
         let asynComponent = null
         if (typeof componentPath === 'object' && componentPath.setup) {
@@ -202,12 +204,20 @@ export function asyncLoader (componentPath, options = {}) {
           default: defaultChildComponent,
           // fallback 变动好像会导致 default 重新渲染, delay 只能放 fallback 里执行
           fallback: h({
-            setup() {
-              // 居然影响到了 error 的状态, 一个未知 bug。先注释 delay 的实现
-              // const { delayed } = useDelay(delay)
-              // return () => !delayed.value ? h(loadingComponent) : null
+            props: {
+              loadingDelay: Number
+            },
+            setup(props) {
+              // delay 居然影响到了 error 的状态渲染报错, 一个未知问题。怀疑是 Suspense 的 bug
+              // patch 的时候 container 是 null. 
+              // component effect 的时候, prevTree = instance.subTree 居然是 comment 节点
+              // hostParentNode(prevTree.el) 寻找父节作为 patch 的 container 为 null. 导致插入节点失败
+              const { delayed } = useDelay(props.loadingDelay)
+              return () => !delayed.value ? h(loadingComponent) : null
               return () => h(loadingComponent)
             }
+          }, {
+            loadingDelay: delay
           })
         })
       }
