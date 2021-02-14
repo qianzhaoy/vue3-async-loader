@@ -1,19 +1,19 @@
 <template>
-  <!-- <div>
+  <div>
     <div style="height: 200px; width: 200px">
       <comp-fetch></comp-fetch>
     </div>
-    <div style="height: 200px; width: 200px">
+    <!-- <div style="height: 200px; width: 200px">
       <comp-content ref="compContent" @resolve="handleResolve" @click="handleContentClick" :title="parentTitle">
         <div>this is child</div>
       </comp-content>
     </div> -->
 
-    <div style="height: 200px; width: 200px">
+    <!-- <div style="height: 200px; width: 200px">
       <demo-error></demo-error>
-    </div>
-
-    <!-- <Suspense 
+    </div> -->
+<!-- 
+    <Suspense 
       :onResolve="onResolve"
       :onPending="onPending"
       :onFallback="onFallback"
@@ -26,7 +26,7 @@
         <div>Loading... (3 seconds)</div>   
       </template>
     </Suspense> -->
-  <!-- </div> -->
+  </div>
 </template>
 
 <script>
@@ -37,7 +37,8 @@ export default {
   name: 'App',
   data() {
     return {
-      parentTitle: 'sdd'
+      parentTitle: 'sdd',
+      toggled: false
     }
   },
   components: {

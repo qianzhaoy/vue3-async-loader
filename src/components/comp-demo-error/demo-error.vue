@@ -9,7 +9,7 @@ function fetchData () {
     setTimeout( () => {
       reject('请求失败')
       // resolve(reactive({ username: '我的用户名' }))
-    }, 1500)
+    }, 1000)
   })
 }
 export default {
