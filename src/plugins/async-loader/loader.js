@@ -173,14 +173,14 @@ export function asyncLoader (componentPath, options = {}) {
         if (typeof componentPath === 'object' && componentPath.setup) {
           const originSetup = componentPath.setup
           const { minTime } = defineAsyncOptions
+          asynComponent = { ...componentPath }
           if (minTime) {
-            componentPath.setup = function () {
+            asynComponent.setup = function () {
               return Promise.all([originSetup.call(this), sleep(minTime)]).then(([setupState]) => {
                 return setupState
               })
             }
           }
-          asynComponent = componentPath
         } else if (typeof componentPath === 'string') {
           asynComponent = optionAsyncLoader(componentPath, defineAsyncOptions)
         } else {
