@@ -175,7 +175,7 @@ export function asyncLoader (componentPath, options = {}) {
   return {
     name: 'asyncLoaderWrapper',
     emits: ['resolve', 'fallback', 'pending'],
-    setup(props, context) {
+    setup(props, { slots }) {
       const { retry, error, setComponentLoadStatus } = useComponentStatus()
       const { 
         errorComponent, 
@@ -187,7 +187,7 @@ export function asyncLoader (componentPath, options = {}) {
 
       const instance = getCurrentInstance()
       const optionsComponent = normalizeSuspenseDefaultSFC(componentPath, defineAsyncOptions)
-      const defaultChildVnode = h(optionsComponent, self.$attrs, instance.vnode.children)
+      const defaultChildVnode = h(optionsComponent, self.$attrs, slots)
       defaultChildVnode.ref = instance.vnode.ref
 
       return (self) => {
