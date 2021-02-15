@@ -149,6 +149,27 @@ function useDelay(delay) {
   }
 }
 
+function normalizeSuspenseDefaultSFC(componentPath, options) {
+  let asynComponent = null
+  if (typeof componentPath === 'object' && componentPath.setup) {
+    const originSetup = componentPath.setup
+    const { minTime } = options
+    asynComponent = { ...componentPath }
+    if (minTime) {
+      asynComponent.setup = function () {
+        return Promise.all([originSetup.call(this), sleep(minTime)]).then(([setupState]) => {
+          return setupState
+        })
+      }
+    }
+  } else if (typeof componentPath === 'string') {
+    asynComponent = optionAsyncLoader(componentPath, options)
+  } else {
+    return null
+  }
+  return asynComponent
+}
+
 
 export function asyncLoader (componentPath, options = {}) {
   return {
@@ -163,31 +184,16 @@ export function asyncLoader (componentPath, options = {}) {
         ...defineAsyncOptions 
       } = { ...asyncLoaderDefaultOptions, ...pluginOptions, ...options, }
       defineAsyncOptions.onComponentLoadStatus = setComponentLoadStatus
+
       const instance = getCurrentInstance()
+      const optionsComponent = normalizeSuspenseDefaultSFC(componentPath, defineAsyncOptions)
+      const defaultChildVnode = h(optionsComponent, self.$attrs, instance.vnode.children)
+      defaultChildVnode.ref = instance.vnode.ref
 
       return (self) => {
         if (error.value) {
           return h(errorComponent, { error: error.value, retry })
         }
-        let asynComponent = null
-        if (typeof componentPath === 'object' && componentPath.setup) {
-          const originSetup = componentPath.setup
-          const { minTime } = defineAsyncOptions
-          asynComponent = { ...componentPath }
-          if (minTime) {
-            asynComponent.setup = function () {
-              return Promise.all([originSetup.call(this), sleep(minTime)]).then(([setupState]) => {
-                return setupState
-              })
-            }
-          }
-        } else if (typeof componentPath === 'string') {
-          asynComponent = optionAsyncLoader(componentPath, defineAsyncOptions)
-        } else {
-          return null
-        }
-        const defaultChildComponent = h(asynComponent, self.$attrs, instance.vnode.children)
-        defaultChildComponent.ref = instance.vnode.ref
 
         return h(Suspense, {
           onFallback(...args) {
@@ -200,7 +206,7 @@ export function asyncLoader (componentPath, options = {}) {
             self.$emit('pending', ...args)
           },
         }, {
-          default: wrapTemplate(defaultChildComponent),
+          default: wrapTemplate(defaultChildVnode),
           // fallback 变动好像会导致 default 重新渲染, delay 只能放 fallback 里执行
           fallback: wrapTemplate(h({
             props: {
