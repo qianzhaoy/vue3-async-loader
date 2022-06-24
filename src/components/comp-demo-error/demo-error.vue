@@ -1,14 +1,8 @@
-<template>
-  <div>我只会报错</div>
-</template>
-
 <script>
-import { reactive } from 'vue'
 function fetchData () {
   return new Promise((resolve, reject) => {
     setTimeout( () => {
-      reject('请求失败')
-      // resolve(reactive({ username: '我的用户名' }))
+      reject('请求超时失败')
     }, 1000)
   })
 }

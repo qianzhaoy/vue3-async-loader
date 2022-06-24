@@ -1,14 +1,21 @@
 <template>
   <div>
     <slot/>
-    <div @click="handleClick">
-      props title from parant: {{title}}
+    <br/>
+
+    <div>
+      父组件传进来的参数: {{title}}
     </div>
+    <br/>
 
-    <div>inner reactive msg: {{innerMsg}}</div>
+    <div>内部响应式状态: {{innerMsg}}</div>
+    <br/>
 
-    <button type="button"  @click="handleClick">emit click</button>
+    <el-button type="button"  @click="handleClick">emit click</el-button>
+
+    <el-divider></el-divider>
     <!-- 嵌套 -->
+    <div>嵌套异步 setup 组件</div>
     <comp-fetch></comp-fetch>
   </div>
 </template>

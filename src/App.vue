@@ -1,44 +1,48 @@
 <template>
   <div>
-    <h2>Suspense 一般用法</h2>
-    <Suspense @resolve="onResolve" @pending="onPending" @fallback="onFallback">
-      <template #default>
-        <compFetchCopy ref="fetchCopy" />
-      </template>
-      <template #fallback>
-        <div>Loading...</div>
-      </template>
-    </Suspense>
+    <el-card header="Suspense一般用法">
+      <Suspense @resolve="onResolve" @pending="onPending" @fallback="onFallback">
+        <template #default>
+          <compFetchCopy />
+        </template>
+        <template #fallback>
+          <div>Loading...</div>
+        </template>
+      </Suspense>
+    </el-card>
 
-    <div>
-      <h2>异步 setup 组件</h2>
-      <comp-fetch :timeout="1000"></comp-fetch>
-    </div>
+    <br />
 
+    <el-card header="异步 setup 组件">
+      <comp-fetch></comp-fetch>
+    </el-card>
 
-    <h2>异步组件嵌套异步 setup 组件</h2>
-    <div>
+    <br />
+
+    <el-card header="异步组件嵌套异步 setup 组件">
       <comp-content v-if="showcontent" ref="compContent" @resolve="onResolve" @click="handleContentClick" :title="parentTitle">
-        <div>this is slot</div>
+        <div>父组件传进来的插槽</div>
       </comp-content>
-    </div>
 
-    <button @click="showcontent = true">加载组件</button>
-    <button @click="setContentMsg">set msg by ref</button>
-    <button @click="setParentTitle">set parentTitle</button>
+      <el-divider v-if="showcontent"></el-divider>
 
+      <el-button @click="showcontent = true">加载组件</el-button>
+      <el-button @click="setContentMsg">set msg by ref</el-button>
+      <el-button @click="setParentTitle">set parentTitle</el-button>
+    </el-card>
 
-    <h2>错误重试</h2>
-    <div>
+    <br />
+
+    <el-card header="错误重试">
       <demo-error title="xxxx" @resolve="onResolve" @pending="onPending" @fallback="onFallback"></demo-error>
-    </div>
+    </el-card>
 
   </div>
 </template>
 
 <script>
 import { asyncLoader } from './plugins/async-loader/index'
-import { defineAsyncComponent, h } from 'vue'
+import { defineAsyncComponent } from 'vue'
 // import compFetchCopy from './components/comp-fetch-copy/fetch.vue'
 
 export default {
@@ -52,7 +56,6 @@ export default {
   components: {
     compFetchCopy: defineAsyncComponent(() => import(/* webpackChunkName: "fetch-copy"*/ './components/comp-fetch-copy/fetch.vue')),
     // compFetchCopy,  
-    // compContent: defineAsyncComponent(() => import(/* webpackChunkName: "comp-content"*/ './components/comp-content/content.vue')),
     compFetch: asyncLoader('comp-fetch/fetch'),
     // compFetch: asyncLoader('comp-fetch/fetch', {
     //   loadingComponent: {

@@ -1,5 +1,5 @@
 <template>
-  <div style="height: 200px">我的用户名: {{ userInfo.username }}</div>
+  <div>我的用户名: {{ userInfo.username }}</div>
 </template>
 
 <script>
@@ -8,7 +8,7 @@ function fetchData () {
   return new Promise((resolve, reject) => {
     setTimeout(function () {
       resolve(reactive({ username: 'zhaoyan.qian' }))
-    }, 2000)
+    }, 1000)
   })
 }
 
