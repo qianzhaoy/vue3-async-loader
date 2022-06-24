@@ -7,7 +7,11 @@ export default function (app) {
   app.use(asyncPlugin, {
     errorComponent: compError,
     loadingComponent: ElSkeleton,
-    minTime: 1000,
-    delay: 200
+    delay: 500,
+    timeout: 1000,
+    shouldRetry: (error, attempts) => {
+      console.log(error.message, attempts);
+    },
+    attempts: 1
   })
 }

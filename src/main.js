@@ -9,5 +9,7 @@ const app = createApp(App)
 
 app.use(installElementPlus)
 app.use(asyncLoaderPlus)
-
+app.config.errorHandler = (err, instance, info) => {
+  // 处理错误，例如：报告给一个服务
+}
 app.mount('#app')

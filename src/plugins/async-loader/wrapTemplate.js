@@ -4,5 +4,5 @@ export function wrapTemplate(children) {
   if (!Array.isArray(children)) {
     children = [children]
   }
-  return h(Fragment, null, children)
+  return () => h(Fragment, null, children)
 }

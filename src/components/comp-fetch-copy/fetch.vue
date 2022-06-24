@@ -8,7 +8,7 @@ function fetchData () {
   return new Promise((resolve, reject) => {
     setTimeout(function () {
       resolve(reactive({ username: 'zhaoyan.qian' }))
-    }, 2000)
+    }, 3000)
   })
 }
 
@@ -16,7 +16,7 @@ export default {
   errorCaptured() {
     console.log('sdssdssdssds');
   },
-  async setup() {
+  async setup(props) {
     const userInfo = await fetchData()
     return {
       userInfo
