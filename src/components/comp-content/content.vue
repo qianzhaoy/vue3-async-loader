@@ -11,7 +11,7 @@
     <div>内部响应式状态: {{innerMsg}}</div>
     <br/>
 
-    <el-button type="button"  @click="handleClick">emit click</el-button>
+    <el-button @click="handleClick">emit click</el-button>
 
     <el-divider></el-divider>
     <!-- 嵌套 -->

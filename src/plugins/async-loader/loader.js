@@ -150,13 +150,27 @@ function normalizeSuspenseDefaultSFC(componentPath, options) {
   return asynComponent
 }
 
+function createInnerComp(
+  comp,
+  {
+    vnode: { ref, props, children }
+  }
+) {
+  const compVnode = h(comp, props, children)
+  // ref 透传
+  compVnode.ref = ref
+  return compVnode
+}
+
+
 export function asyncLoader (componentPath, options = {}) {
   return {
     name: 'asyncLoaderWrapper',
     emits: ['resolve', 'fallback', 'pending'],
     inheritAttrs: false,
-    __asyncLoader:  Promise.resolve(),
-    setup(props, { slots, emit, attrs }) {
+    // 骗过上帝，setRef 时，通过 __asyncLoader 判断异步组件来处理内部 ref
+    __asyncLoader: Promise.resolve(),
+    setup(props, { emit }) {
       const { retry, error, setComponentLoadStatus } = useComponentStatus()
       const { 
         errorComponent, 
@@ -174,8 +188,8 @@ export function asyncLoader (componentPath, options = {}) {
         if (error.value) {
           return h(errorComponent, { error: error.value, retry })
         }
-        const defaultChildVnode = h(optionsComponent, attrs, slots)
-        defaultChildVnode.ref = instance.vnode.ref
+
+        const defaultChildVnode = createInnerComp(optionsComponent, instance)
 
         const fallbackVnode = h({
           props: {
@@ -193,8 +207,6 @@ export function asyncLoader (componentPath, options = {}) {
         }, {
           loadingDelay: delay
         })
-
-        const { delayed } = useDelay(delay)
 
         return h(Suspense, {
           onFallback(...args) {
