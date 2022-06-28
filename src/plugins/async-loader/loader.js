@@ -159,7 +159,7 @@ export function asyncLoader (componentPath, options = {}) {
     name: 'asyncLoaderWrapper',
     emits: ['resolve', 'fallback', 'pending'],
     inheritAttrs: false,
-    /* 骗过上帝，setRef 时，通过 __asyncLoader 判断异步组件来处理内部 ref
+    /* 骗过上帝，setRef 时，通过 __asyncLoader 判断异步组件来处理透传 ref
     https://github.com/vuejs/core/blob/main/packages/runtime-core/src/rendererTemplateRef.ts#L43
     */
     __asyncLoader: Promise.resolve(),
