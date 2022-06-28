@@ -31,10 +31,19 @@ function createLoaderFunc(componentPath, options = baseLoaderDefaultOptions) {
         })
       }, timeout);
     }
-    return import(/* webpackChunkName: "[request]"*/ `~components/${componentPath}`).then((componentObject) => {
+
+    function importComp() {
+      if (typeof componentPath === 'function') {
+        return componentPath()
+      } else {
+        return import(/* webpackChunkName: "[request]"*/ `~/components/${componentPath}`)
+      }
+    }
+
+    return importComp().then((componentObject) => {
       onComponentLoadStatus({
         loaded: true
-      })
+      }) 
       return componentObject
     }).finally(() => {
       clearTimeout(timer)
@@ -63,13 +72,9 @@ function setAsyncLoaderOptions (options = {}) {
   }
 }
 
-function optionAsyncLoader(componentPath, options = {}) {
-  const { onComponentLoadStatus } = options
+function createAsyncCompBy(componentPath, options = {}) {
   const asyncComponentOptions = {
-    loader: createLoaderFunc(componentPath, {
-      timeout: options.timeout,
-      onComponentLoadStatus
-    }),
+    loader: createLoaderFunc(componentPath, options),
     onError(error, retry, fail, attempts) {
       const needRetry = typeof options.shouldRetry === 'function' && options.shouldRetry(error, attempts)
       if (needRetry || attempts <= (options.attempts || 0)) {
@@ -135,8 +140,8 @@ function useDelay(delay) {
 
 function normalizeSuspenseDefaultSFC(componentPath, options) {
   let asynComponent = componentPath
-  if (typeof componentPath === 'string') {
-    asynComponent = optionAsyncLoader(componentPath, options)
+  if (typeof componentPath === 'string' || typeof componentPath === 'function') {
+    asynComponent = createAsyncCompBy(componentPath, options)
   }
   return asynComponent
 }
@@ -171,11 +176,13 @@ export function asyncLoader (componentPath, options = {}) {
         delay,
         ...defineAsyncOptions 
       } = { ...asyncLoaderDefaultOptions, ...pluginOptions, ...options, }
-      defineAsyncOptions.onComponentLoadStatus = setComponentLoadStatus
 
       const instance = getCurrentInstance()
 
-      const optionsComponent = normalizeSuspenseDefaultSFC(componentPath, defineAsyncOptions)
+      const optionsComponent = normalizeSuspenseDefaultSFC(componentPath, {
+        ...defineAsyncOptions,
+        onComponentLoadStatus: setComponentLoadStatus
+      })
 
       return () => {
         if (error.value) {

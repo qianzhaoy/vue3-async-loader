@@ -43,7 +43,6 @@
 <script>
 import { asyncLoader } from './plugins/async-loader/index'
 import { defineAsyncComponent } from 'vue'
-// import compFetchCopy from './components/comp-fetch-copy/fetch.vue'
 
 export default {
   name: 'App',
@@ -55,8 +54,7 @@ export default {
   },
   components: {
     compFetchCopy: defineAsyncComponent(() => import(/* webpackChunkName: "fetch-copy"*/ './components/comp-fetch-copy/fetch.vue')),
-    // compFetchCopy,  
-    compFetch: asyncLoader('comp-fetch/fetch'),
+    compFetch: asyncLoader(() => import('~/components/comp-fetch/fetch')),
     // compFetch: asyncLoader('comp-fetch/fetch', {
     //   loadingComponent: {
     //     render() {
