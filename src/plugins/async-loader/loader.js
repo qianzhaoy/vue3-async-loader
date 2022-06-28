@@ -1,5 +1,4 @@
-import { h, Suspense, defineAsyncComponent, onErrorCaptured, ref, getCurrentInstance, watch  } from 'vue'
-import { wrapTemplate } from './wrapTemplate'
+import { h, Suspense, defineAsyncComponent, onErrorCaptured, ref, getCurrentInstance, Fragment  } from 'vue'
 
 const baseLoaderDefaultOptions = {
   timeout: 0,
@@ -11,22 +10,14 @@ const baseLoaderDefaultOptions = {
 
 const pluginOptions = {}
 
-function sleep(time) {
-  if (!time) {
-    return Promise.resolve(true)
-  }
-  return new Promise(resolve => {
-    setTimeout(() => {
-      resolve(true)
-    }, time);
-  })
-}
-
-function throwError(errMessage) {
-  throw new Error(errMessage)
-}
-
 function noop() {}
+
+function wrapTemplate(children) {
+  if (!Array.isArray(children)) {
+    children = [children]
+  }
+  return () => h(Fragment, null, children)
+}
 
 function createLoaderFunc(componentPath, options = baseLoaderDefaultOptions) {
   const { timeout, onComponentLoadStatus = noop } = options
@@ -72,7 +63,7 @@ function setAsyncLoaderOptions (options = {}) {
   }
 }
 
-export function optionAsyncLoader(componentPath, options = {}) {
+function optionAsyncLoader(componentPath, options = {}) {
   const { onComponentLoadStatus } = options
   const asyncComponentOptions = {
     loader: createLoaderFunc(componentPath, {
@@ -168,7 +159,9 @@ export function asyncLoader (componentPath, options = {}) {
     name: 'asyncLoaderWrapper',
     emits: ['resolve', 'fallback', 'pending'],
     inheritAttrs: false,
-    // 骗过上帝，setRef 时，通过 __asyncLoader 判断异步组件来处理内部 ref
+    /* 骗过上帝，setRef 时，通过 __asyncLoader 判断异步组件来处理内部 ref
+    https://github.com/vuejs/core/blob/main/packages/runtime-core/src/rendererTemplateRef.ts#L43
+    */
     __asyncLoader: Promise.resolve(),
     setup(props, { emit }) {
       const { retry, error, setComponentLoadStatus } = useComponentStatus()
