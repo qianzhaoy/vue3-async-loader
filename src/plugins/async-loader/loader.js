@@ -19,36 +19,34 @@ function wrapTemplate(children) {
   return () => h(Fragment, null, children)
 }
 
-function createLoaderFunc(componentPath, options = baseLoaderDefaultOptions) {
+function importComponent(componentPath, options = baseLoaderDefaultOptions) {
   const { timeout, onComponentLoadStatus = noop } = options
-  return function importComponent() {
-    let _timer
-    if (timeout) {
-      _timer = setTimeout(() => {
-        onComponentLoadStatus({
-          error: new Error('加载组件超时'),
-          loaded: false
-        })
-      }, timeout);
-    }
-
-    function _importComp() {
-      if (typeof componentPath === 'function') {
-        return componentPath()
-      } else {
-        return import(/* webpackChunkName: "[request]"*/ `~/components/${componentPath}`)
-      }
-    }
-
-    return _importComp().then((componentObject) => {
+  let _timer
+  if (timeout) {
+    _timer = setTimeout(() => {
       onComponentLoadStatus({
-        loaded: true
-      }) 
-      return componentObject
-    }).finally(() => {
-      clearTimeout(_timer)
-    })
+        error: new Error('加载组件超时'),
+        loaded: false
+      })
+    }, timeout);
   }
+
+  function _importComp() {
+    if (typeof componentPath === 'function') {
+      return componentPath()
+    } else {
+      return import(/* webpackChunkName: "[request]"*/ `~/components/${componentPath}`)
+    }
+  }
+
+  return _importComp().then((componentObject) => {
+    onComponentLoadStatus({
+      loaded: true
+    }) 
+    return componentObject
+  }).finally(() => {
+    clearTimeout(_timer)
+  })
 }
 
 const asyncLoaderDefaultOptions = {
@@ -74,7 +72,7 @@ function setAsyncLoaderOptions (options = {}) {
 
 function createAsyncCompBy(componentPath, options = {}) {
   const asyncComponentOptions = {
-    loader: createLoaderFunc(componentPath, options),
+    loader: () => importComponent(componentPath, options),
     onError(error, retry, fail, attempts) {
       const needRetry = typeof options.shouldRetry === 'function' && options.shouldRetry(error, attempts)
       if (needRetry || attempts <= (options.attempts || 0)) {
