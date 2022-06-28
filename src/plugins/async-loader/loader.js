@@ -22,9 +22,9 @@ function wrapTemplate(children) {
 function createLoaderFunc(componentPath, options = baseLoaderDefaultOptions) {
   const { timeout, onComponentLoadStatus = noop } = options
   return function importComponent() {
-    let timer
+    let _timer
     if (timeout) {
-      timer = setTimeout(() => {
+      _timer = setTimeout(() => {
         onComponentLoadStatus({
           error: new Error('加载组件超时'),
           loaded: false
@@ -32,7 +32,7 @@ function createLoaderFunc(componentPath, options = baseLoaderDefaultOptions) {
       }, timeout);
     }
 
-    function importComp() {
+    function _importComp() {
       if (typeof componentPath === 'function') {
         return componentPath()
       } else {
@@ -40,13 +40,13 @@ function createLoaderFunc(componentPath, options = baseLoaderDefaultOptions) {
       }
     }
 
-    return importComp().then((componentObject) => {
+    return _importComp().then((componentObject) => {
       onComponentLoadStatus({
         loaded: true
       }) 
       return componentObject
     }).finally(() => {
-      clearTimeout(timer)
+      clearTimeout(_timer)
     })
   }
 }
@@ -164,8 +164,9 @@ export function asyncLoader (componentPath, options = {}) {
     name: 'asyncLoaderWrapper',
     emits: ['resolve', 'fallback', 'pending'],
     inheritAttrs: false,
-    /* 骗过上帝，setRef 时，通过 __asyncLoader 判断异步组件来处理透传 ref
+    /* 骗过上帝
     https://github.com/vuejs/core/blob/main/packages/runtime-core/src/rendererTemplateRef.ts#L43
+    setRef 时，通过 __asyncLoader 字段判断来跳过该组件 ref 的设置。再通过 render 函数把 ref 字段赋值给我们想要透传的组件的 vnode 即可完成 forWardRef
     */
     __asyncLoader: Promise.resolve(),
     setup(props, { emit }) {
